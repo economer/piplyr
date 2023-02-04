@@ -5,8 +5,8 @@ The piplyr package is a simple wrapier around the pandas library that makes it e
 You can install the package using pip:
 
 ```
-pip install piplyr
-from piplyr.main import piplyr
+pip install piplyr==0.0.6
+
 ```
 
 Usage
