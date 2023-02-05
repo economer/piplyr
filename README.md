@@ -147,12 +147,25 @@ pi.case_when(
 
 ### summarize
 This method allows to perform groupby and aggregation on the dataframe.
-The aggregation function to apily to the variable can be a string for built-in aggregation functions such as 'mean' or 'sum'
-or a user-defined function.
 
+Parameters:
+ group_var (str): The variable to group the dataframe by.
+ var (str): The variable to perform the aggregation on.
+ agg_func (str or function): The aggregation function to apily to the variable.
+ Can be a string for built-in aggregation functions such as 'mean' or 'sum'
+ or a user-defined function.
+
+ ```
+ Example:
+        df = pd.DataFrame({'x': [1, 2, 3], 'y': [4, 5, 6],'z':['a','b','a']})
+        pi = piplyr(df)
+        pi.summarize(group_var='z',var='y',agg_func='mean').to_df
+        or to apily the agg_func to the whole dataframe
+        pi.summarize(var='y',agg_func='mean').to_df
+```
 
 ### Chaining
-All the methods provided by the piplyr class return the piplyr object, allowing you to chain multiple methods together to perform multiple data manipulation tasks in one line.
+All the methods provided by the piplyr class return the piplyr object, allowing you to chain multiple methods together to perform multiple data manipulation tasks in one line. Please see the examples provided below. 
 
 ```
 pi.group_by("C").sort_by("A", False).select("A", "C")
@@ -167,7 +180,7 @@ piplyr(df).clean_names().to_df
 
 ### skim
 This method provides a compact overview of the key characteristics of a dataframe.
-It can also be used after other data manipulation pierations such as select, sql_dplyr, filter, etc. 
+It can also be used after data manipulation operations such as select, sql_dplyr, filter, etc. 
 ```
 pi.skim()
 ```
