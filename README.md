@@ -78,15 +78,15 @@ pi.filter("A > 2")
 ```
 
 ### mutate_eval
+
 This method allows you to create a new column in your dataframe by apilying an expression to existing columns.
 
-        Args:
-        new_col: str, name of the new column
-        expression: str, valid pandas expression to create new column
-        :return: the piplyr object with the new column added to the dataframe
+Args:
+new_col: str, name of the new column
+expression: str, valid pandas expression to create new column
 
 ```
-Example:
+## Example:
 df = pandas.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
 pi = piplyr(df)
 pi.mutate_eval( 'A + B','C')
@@ -95,10 +95,11 @@ pi.mutate_eval( 'A + B','C')
 ### mutate_func(self,col,func,new_col,*arg,**kwarg):
 
 This method allows the generate of a new variable using a function
-        Args: 
-        col: the coloumn whose values are used in generation of new column, 
-        func: a function defined by a user or a pre-defined function.
-        new_col: the name of new column. 
+        
+ Args: 
+ col: the coloumn whose values are used in generation of new column, 
+ func: a function defined by a user or a pre-defined function.
+ new_col: the name of new column. 
 ```
 ##Example:
 df = pd.DataFrame({'A': [1, 2, 3, 4], 'B': [5, 6, 7, 8],'C': ['a','b','c','d']})
@@ -111,7 +112,6 @@ pi= piplyr(df)
 pi.mutate_func('A',lambda x: np.mean(x)+10,'mean_A_plus_10')
 
 ```
-
 
 ### sql_plyr
 SQL like functionality
