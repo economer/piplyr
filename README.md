@@ -1,5 +1,6 @@
 # piplyr package
-The piplyr package is a simple wrapier around the pandas library that makes it easy to perform common data manipulation similar to dplyr style. The package provides a piplyr class that can be initialized with a DataFrame and provides methods for performing tasks such as group by, sort by, select, drop, rename, filter and SQL like functionality.
+
+#### *The "piplyr" package offers a convenient way to manipulate data using a syntax similar to the popular R package "dplyr". It's built as a simple wrapper for the "pandas" library, providing a "piplyr" class that can be initialized with a pandas DataFrame. The package includes methods for tasks like grouping, sorting, selecting, dropping, renaming, filtering, and even SQL-like functionality.*
 
 ## Installation
 You can install the package using pip:
