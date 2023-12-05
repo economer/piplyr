@@ -435,25 +435,42 @@ class piplyr:
             self.df.loc[self.df.eval(condition), target_var] = value
         return self
 
-    def join(self, other_df, by, join_type='inner'):
+    def join(self, other_df, key_columns, join_type='left'):
         """
-        Joins the current DataFrame with another DataFrame.
+        Joins the current DataFrame with another DataFrame using a unique key generated from specified columns.
 
         Args:
             other_df: The DataFrame to join with.
-            by: The column name(s) to join on.
+            key_columns: List of column names to be used for creating the unique key.
             join_type: Type of join to perform ('inner', 'left', 'right', 'outer').
 
         Returns:
             self: The modified piplyr object.
-        Example:    
-            >>> df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6],'F':['a','b','c']})
-            >>> df2 = pd.DataFrame({'C': [10, 20], 'D': [40, 50],'F':['b','c']})
-            >>> piplyr(df).join(df2,'F','outer')
+        
+        # Example usage
+            Put the keys in the list
+            >>> df1 and df2 are your dataframes
+            >>> df1 = pd.DataFrame(...)
+            >>> df2 = pd.DataFrame(...)
+            >>> piplyr(df1).join(df2, ['key_x', 'key_y'], 'left')
+
+            # Performing the join with the specified key columns    
         """
         if join_type not in ['inner', 'left', 'right', 'outer']:
             raise ValueError("join_type must be one of 'inner', 'left', 'right', 'outer'")
-        self.df = self.df.merge(other_df, on=by, how=join_type)
+
+        # Function to create a unique key from a row
+        def create_unique_key(row):
+            return '_'.join(str(row[col]) for col in key_columns)
+
+        # Create a unique key in both dataframes
+        self.df['unique_key'] = self.df.apply(create_unique_key, axis=1)
+        other_df['unique_key'] = other_df.apply(create_unique_key, axis=1)
+
+        # Perform the merge
+        self.df = self.df.merge(other_df, on='unique_key', how=join_type)
+        # Optionally, you can drop the unique_key column after the merge if it's no longer needed
+        # self.df = self.df.drop('unique_key', axis=1)
         return self
 
     def count_na(self):
