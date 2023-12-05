@@ -1,0 +1,10 @@
+LICENSE
+README.md
+setup.py
+piplyr/__init__.py
+piplyr/piplyr.py
+piplyr.egg-info/PKG-INFO
+piplyr.egg-info/SOURCES.txt
+piplyr.egg-info/dependency_links.txt
+piplyr.egg-info/requires.txt
+piplyr.egg-info/top_level.txt
