@@ -105,7 +105,13 @@ result_pi = pi.select('A', 'B').filter_row('A > 1').summarize(avg_B=lambda x: x[
 
 ### Additional Methods
 
-The package also includes several other methods like `join`, `count_na`, `distinct`, `pivot_longer`, `pivot_wider`, `clean_names`, `separate`, `str_pad`, `str_sub`, `str_extract`, `str_detect`, `str_len`, `str_lower`, `str_upper`, `str_startswith`, `str_endswith`, `str_contains`, `fct_lump`, `fct_infreq`, `fct_relevel`, `fct_recode`, and `fct_reorder`. Each of these methods provides specific data manipulation functionalities and can be explored further in the package documentation.
+The package also includes several other methods like `join`, `count_na`, `distinct`, `pivot_longer`, `pivot_wider`, `clean_names`, `separate`, `str_pad`, `str_sub`, `str_extract`, `str_detect`, `str_len`, `str_lower`, `str_upper`, `str_startswith`, `str_endswith`, `str_contains`, `fct_lump`, `fct_infreq`, `fct_relevel`, `fct_recode`, `fct_reorder` and others. 
+
+Each of these methods provides specific data manipulation functionalities and can be explored further in the package documentation.
+
+## More Examples
+
+Please consult docstrings of various methods that include explnations and examples. 
 
 ## Contributing
 

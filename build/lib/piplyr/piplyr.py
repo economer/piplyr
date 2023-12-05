@@ -216,6 +216,135 @@ class piplyr:
 
         return self
     
+    def agg_funcs(self, **kwargs):
+        """
+        Apply multiple aggregation functions to columns.
+
+        Args:
+            kwargs: Key-value pairs where the key is the column name and the value is a list of aggregation functions.
+
+        Returns:
+            self: The modified piplyr object with aggregated DataFrame.
+
+        Examples:
+            >>> df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
+            >>> pi = piplyr(df).agg_funcs(A=['sum', 'mean'], B=['min', 'max'])
+        """
+        agg_dict = {col: funcs for col, funcs in kwargs.items()}
+        self.df = self.df.agg(agg_dict)
+        return self
+    
+    def rowwise(self, func, *args, **kwargs):
+        """
+        Apply a function row-wise to the DataFrame.
+
+        Args:
+            func: A function to apply to each row.
+            *args, **kwargs: Additional arguments and keyword arguments for the function.
+
+        Returns:
+            self: The modified piplyr object.
+
+        Examples:
+            >>> df = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})
+            >>> func = lambda row: row['A'] + row['B']
+            >>> pi = piplyr(df).rowwise(func)
+        """
+        self.df = self.df.apply(lambda row: func(row, *args, **kwargs), axis=1)
+        return self
+    
+    
+    def sample_n(self, n):
+        """
+        Randomly sample n rows from the DataFrame.
+
+        Args:
+            n: Number of rows to sample.
+
+        Returns:
+            self: The modified piplyr object.
+
+        Examples:
+            >>> df = pd.DataFrame({'A': range(10), 'B': range(10, 20)})
+            >>> pi = piplyr(df).sample_n(5)
+        """
+        self.df = self.df.sample(n=n)
+        return self
+    
+    def sample_frac(self, frac):
+        """
+        Randomly sample a fraction of rows from the DataFrame.
+
+        Args:
+            frac: Fraction of rows to sample.
+
+        Returns:
+            self: The modified piplyr object.
+
+        Examples:
+            >>> df = pd.DataFrame({'A': range(10), 'B': range(10, 20)})
+            >>> pi = piplyr(df).sample_frac(0.5)
+        """
+        self.df = self.df.sample(frac=frac)
+        return self
+    
+    def mutate_conditional(self, **kwargs):
+        """
+        Apply conditional mutations to columns.
+
+        Args:
+            kwargs: Key-value pairs where keys are column names and values are tuples of (condition, value).
+
+        Returns:
+            self: The modified piplyr object.
+
+        Examples:
+            >>> df = pd.DataFrame({'A': [10, 20], 'B': [30, 40]})
+            >>> pi = piplyr(df).mutate_conditional(A=('A > 15', 100), B=('B < 35', 200))
+        """
+        for col, (condition, value) in kwargs.items():
+            self.df.loc[self.df.eval(condition), col] = value
+        return self
+        
+    def bin_data(self, column, bins):
+        """
+        Bin numeric data into categories.
+
+        Args:
+            column: The column to bin.
+            bins: The edges defining the bins.
+
+        Returns:
+            self: The modified piplyr object.
+
+        Examples:
+            >>> df = pd.DataFrame({'A': [1, 4, 6, 8]})
+            >>> pi = piplyr(df).bin_data('A', bins=[0, 3, 6, 9])
+        """
+        self.df[column + '_binned'] = pd.cut(self.df[column], bins=bins)
+        return self
+    
+    
+    def groupwise_custom(self, group_vars, func, *args, **kwargs):
+        """
+        Apply a custom function to groups within the DataFrame.
+
+        Args:
+            group_vars: Columns to group by.
+            func: Custom function to apply to each group.
+            *args, **kwargs: Additional arguments and keyword arguments for the function.
+
+        Returns:
+            self: The modified piplyr object.
+
+        Examples:
+            >>> df = pd.DataFrame({'Group': ['A', 'A', 'B', 'B'], 'Value': [1, 2, 3, 4]})
+            >>> func = lambda x: x.sum()
+            >>> pi = piplyr(df).groupwise_custom('Group', func)
+        """
+        self.grouped = self.df.groupby(group_vars)
+        self.df = self.grouped.apply(lambda x: func(x, *args, **kwargs)).reset_index(drop=True)
+        return self
     
     def sql_plyr(self, expression):
         """
@@ -232,7 +361,23 @@ class piplyr:
             self.df = pd.read_sql_query(expression, con)
         return self
 
-    # ... [Other methods like case_when, join, count_na, etc.] ...
+    def convert_dtype(self, column, dtype):
+        """
+        Convert the data type of a specified column.
+
+        Args:
+            column: The column whose data type is to be converted.
+            dtype: The target data type.
+
+        Returns:
+            self: The modified piplyr object.
+
+        Examples:
+            >>> df = pd.DataFrame({'A': ['1', '2', '3']})
+            >>> pi = piplyr(df).convert_dtype('A', int)
+        """
+        self.df[column] = self.df[column].astype(dtype)
+        return self
 
     def pipe(self, func, *args, **kwargs):
         """
@@ -260,6 +405,10 @@ class piplyr:
 
         Returns:
             self: The modified piplyr object.
+        Examples:
+        >>> df = pd.DataFrame({'A': [10, 15, 20]})
+        >>> cases = [('A > 15', 'High'), ('A <= 15', 'Low')]
+        >>> pi = piplyr(df).case_when(cases, 'Category')    
         """
         self.df[target_var] = np.nan
         for condition, value in cases:
@@ -277,6 +426,10 @@ class piplyr:
 
         Returns:
             self: The modified piplyr object.
+        Example:    
+            >>> df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6],'F':['a','b','c']})
+            >>> df2 = pd.DataFrame({'C': [10, 20], 'D': [40, 50],'F':['b','c']})
+            >>> piplyr(df).join(df2,'F','outer')
         """
         if join_type not in ['inner', 'left', 'right', 'outer']:
             raise ValueError("join_type must be one of 'inner', 'left', 'right', 'outer'")
@@ -289,6 +442,10 @@ class piplyr:
 
         Returns:
             pd.Series: A Series with the count of NA values for each column.
+            
+        Examples:
+        >>> df = pd.DataFrame({'A': [1, np.nan, 3], 'B': [4, 5, np.nan]})
+        >>> na_count = piplyr(df).count_na()    
         """
         return self.df.isna().sum()
 
@@ -304,6 +461,10 @@ class piplyr:
 
         Returns:
             self: The modified piplyr object.
+        
+        Examples:
+        >>> df = pd.DataFrame({'A': [1, 1, 2], 'B': [3, 3, 3]})
+        >>> pi = piplyr(df).distinct()
         """
         self.df = self.df.drop_duplicates(subset=columns)
         return self
@@ -314,22 +475,37 @@ class piplyr:
 
         Returns:
             pd.DataFrame: A DataFrame containing summary statistics for each column.
+        
+        Examples:
+        >>> df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
+        >>> summary = piplyr(df).skim()
         """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            stats = {
-                'Types': self.df.dtypes,
-                'Missing Values': self.df.isna().sum(),
-                'Unique Values': self.df.nunique(),
-                'Min': self.df.min(),
-                'Max': self.df.max(),
-                'Mean': self.df.mean(),
-                'Std': self.df.std(),
-                '25%': self.df.quantile(0.25),
-                '50%': self.df.quantile(0.50),
-                '75%': self.df.quantile(0.75)
-            }
-            return pd.DataFrame(stats)
+
+        stats = {
+            'Types': self.df.dtypes,
+            'Missing Values': self.df.isna().sum(),
+            'Unique Values': self.df.nunique(),
+            'Min': self.df.select_dtypes(include=[np.number]).min(),
+            'Max': self.df.select_dtypes(include=[np.number]).max(),
+            'Mean': self.df.select_dtypes(include=[np.number]).mean(),
+            'Std': self.df.select_dtypes(include=[np.number]).std(),
+            '25%': self.df.select_dtypes(include=[np.number]).quantile(0.25),
+            '50%': self.df.select_dtypes(include=[np.number]).quantile(0.50),
+            '75%': self.df.select_dtypes(include=[np.number]).quantile(0.75)
+        }
+
+        # Convert stats dict to DataFrame
+        stats_df = pd.DataFrame(stats)
+
+        # Fill non-applicable numeric stats with NaN for non-numeric columns
+        for col in self.df.columns:
+            if self.df[col].dtype not in [np.number]:
+                stats_df.loc[['Min', 'Max', 'Mean', 'Std', '25%', '50%', '75%'], col] = np.nan
+
+        return stats_df
+    
 
     def pivot_longer(self, cols, id_vars=None, var_name='variable', value_name='value'):
         """
@@ -343,6 +519,10 @@ class piplyr:
 
         Returns:
             self: The modified piplyr object.
+        
+        Examples:
+        >>> df = pd.DataFrame({'Name': ['A', 'B'], 'Val1': [1, 2], 'Val2': [3, 4]})
+        >>> pi = piplyr(df).pivot_longer(cols=['Val1', 'Val2'], id_vars='Name')    
         """
         self.df = pd.melt(self.df, id_vars=id_vars, value_vars=cols, var_name=var_name, value_name=value_name)
         return self
@@ -358,6 +538,10 @@ class piplyr:
 
         Returns:
             self: The modified piplyr object.
+        
+        Examples:
+        >>> df = pd.DataFrame({'Name': ['A', 'A', 'B', 'B'], 'Variable': ['Val1', 'Val2', 'Val1', 'Val2'], 'Value': [1, 2, 3, 4]})
+        >>> pi = piplyr(df).pivot_wider(index='Name', columns='Variable', values='Value')    
         """
         self.df = self.df.pivot(index=index, columns=columns, values=values)
         return self
@@ -369,6 +553,10 @@ class piplyr:
 
         Returns:
             self: The modified piplyr object.
+            
+        Examples:
+        >>> df = pd.DataFrame({'First Name': [1, 2, 3], 'Last-Name': [4, 5, 6]})
+        >>> pi = piplyr(df).clean_names()    
         """
         self.df.columns = [re.sub('[^0-9a-zA-Z]+', '_', col).lower() for col in self.df.columns]
         return self
@@ -387,6 +575,10 @@ class piplyr:
 
         Returns:
             self: The piplyr object with the DataFrame modified.
+        
+        Examples:
+        >>> df = pd.DataFrame({'Name': ['John Doe', 'Jane Smith']})
+        >>> pi = piplyr(df).separate('Name', into=['FirstName', 'LastName'], sep=' ')
         """
         split_cols = self.df[col].str.split(sep, expand=True)
         num_cols = len(into)
@@ -417,6 +609,10 @@ class piplyr:
 
         Returns:
             self: The piplyr object with the DataFrame modified.
+        
+        Examples:
+        >>> df = pd.DataFrame({'Name': ['John', 'Jane']})
+        >>> pi = piplyr(df).str_pad('Name', 10, side='right', pad='_')
         """
         if side not in ['left', 'right']:
             raise ValueError("Side must be either 'left' or 'right'")
@@ -427,7 +623,7 @@ class piplyr:
             self.df[column] = self.df[column].astype(str).str.pad(width, side='right', fillchar=pad)
         return self
 
-    def str_sub(self, pattern, replacement):
+    def str_replace(self, pattern, replacement):
         """
         Replaces a pattern in strings with a replacement string.
 
@@ -437,6 +633,10 @@ class piplyr:
 
         Returns:
             self: The piplyr object with the DataFrame modified.
+        
+        Examples:
+        >>> df = pd.DataFrame({'Text': ['foo123', 'bar456', 'baz789']})
+        >>> pi = piplyr(df).str_sub('\\d+', 'XYZ')
         """
         self.df = self.df.applymap(lambda x: re.sub(pattern, replacement, str(x)) if isinstance(x, str) else x)
         return self
@@ -451,6 +651,10 @@ class piplyr:
 
         Returns:
             self: The piplyr object with the DataFrame modified.
+        
+        Examples:
+        >>> df = pd.DataFrame({'Text': ['apple123', 'banana456', 'cherry789']})
+        >>> pi = piplyr(df).str_extract('(\\d+)', 'Text')
         """
         if col:
             self.df[col + '_extracted'] = self.df[col].str.extract(pattern)
@@ -590,7 +794,7 @@ class piplyr:
         return self
 
     
-    # ... [Previous methods] ...
+    
 
     def fct_lump(self, column, n=10, other_level='Other'):
         """
@@ -708,7 +912,7 @@ class piplyr:
         self.df[column] = pd.Categorical(self.df[column], categories=np.array(self.df[column])[ordering], ordered=True)
         return self
 
-    # ... [Other methods] ...
+    
 
 
     def __call__(self, df):
