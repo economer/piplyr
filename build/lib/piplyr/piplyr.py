@@ -346,6 +346,26 @@ class piplyr:
         self.df = self.grouped.apply(lambda x: func(x, *args, **kwargs)).reset_index(drop=True)
         return self
     
+    
+    def groupwise_np(self, group_by, target_col, func):
+        """
+        Apply a custom function to a specific column within groups of the DataFrame.
+
+        Args:
+            group_by: The column name to group by.
+            target_col: The target column to apply the function.
+            func: The function to apply.
+
+        Returns:
+            self: The modified piplyr object.
+
+        Examples:
+            >>> df = pd.DataFrame({'F': ['x', 'x', 'y', 'y'], 'A': [1, 2, 3, 4]})
+            >>> pi = piplyr(df).groupwise_np('F', 'A', np.mean)
+        """
+        self.df = self.df.groupby(group_by)[target_col].apply(func).reset_index()
+        return self
+    
     def sql_plyr(self, expression):
         """
         Executes an SQL query on the DataFrame.
